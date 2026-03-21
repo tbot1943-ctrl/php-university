@@ -1,0 +1,95 @@
+<?php
+$students = [
+    ["Абдуллаева", "Айтегин Рустамовна", 19],
+    ["Азимов", "Темирлан Эсеналиевич", 19],
+    ["Айдарова", "Айдана Максаттовна", 19],
+    ["Акбай кызы", "Айзада", 19],
+    ["Алиев", "Рафаэль Чынгызович", 19],
+    ["Аскарбекова", "Малика Аскарбековна", 19],
+    ["Борбуева", "Шекер Калдаровна", 19],
+    ["Джапарова", "Алия Джолдошевна", 19],
+    ["Кадырбеков", "Фархат Азаматович", 19],
+    ["Канатбекова", "Гулдана Канатбековна", 19],
+    ["Кубанычбек уулу", "Элмир", 19],
+    ["Кубанычбекова", "Элина Кубанычбековна", 19],
+    ["Кыдырбеков", "Канимет Урматович", 19],
+    ["Мавлянова", "Айдана Баялыевна", 19],
+    ["Масалбекова", "Ширин Уланбековна", 19],
+    ["Токтошов", "Нурбол Бактыбайович", 19],
+    ["Шадыбекова", "Назгүл Жаңыбаевна", 19],
+    ["Шарипова", "Жибек Шариповна", 19],
+    ["Ысак", "Эмир", 19],
+    ["Эдилбекова", "Санирабига", 19],
+];
+
+$file = 'data.json';
+if (file_exists($file)) {
+    $newStudents = json_decode(file_get_contents($file), true);
+    if ($newStudents) {
+        foreach ($newStudents as $s) {
+            $students[] = [$s['name'], $s['surname'], $s['age']];
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newStudent = [
+        "name" => $_POST['name'],
+        "surname" => $_POST['surname'],
+        "age" => (int)$_POST['age']
+    ];
+
+
+    $json = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+    $json[] = $newStudent;
+    file_put_contents($file, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+
+    header("Location: index.php");
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Студенты ИСТ(б)-1-24</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+        form { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<h2>Добавить студента</h2>
+<form method="post">
+    <input type="text" name="name" placeholder="Фамилия" required>
+    <input type="text" name="surname" placeholder="Имя Отчество" required>
+    <input type="number" name="age" value="19" required>
+    <button type="submit">Добавить</button>
+</form>
+
+<h2>Таблица студентов</h2>
+<table>
+    <tr>
+        <th>Фамилия</th>
+        <th>Имя Отчество</th>
+        <th>Возраст</th>
+        <th>Группа</th>
+    </tr>
+
+    <?php foreach ($students as $student): ?>
+        <tr>
+            <td><?= htmlspecialchars($student[0]) ?></td>
+            <td><?= htmlspecialchars($student[1]) ?></td>
+            <td><?= $student[2] ?></td>
+            <td>ИСТ(б)-1-24</td>
+        </tr>
+    <?php endforeach; ?>
+
+</table>
+
+</body>
+</html>
