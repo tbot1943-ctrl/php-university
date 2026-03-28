@@ -23,31 +23,55 @@ $students = [
 ];
 
 $file = 'data.json';
-if (file_exists($file)) {
-    $newStudents = json_decode(file_get_contents($file), true);
-    if ($newStudents) {
-        foreach ($newStudents as $s) {
-            $students[] = [$s['name'], $s['surname'], $s['age']];
-        }
+
+
+$json = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+
+if ($json) {
+    foreach ($json as $s) {
+        $students[] = [$s['name'], $s['surname'], $s['age']];
     }
 }
 
+// удаление
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $newStudent = [
-        "name" => $_POST['name'],
-        "surname" => $_POST['surname'],
-        "age" => (int)$_POST['age']
-    ];
 
+    // Удаление
+    if (isset($_POST['delete'])) {
+        $index = (int)$_POST['delete'];
 
-    $json = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
-    $json[] = $newStudent;
-    file_put_contents($file, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        if (file_exists($file)) {
+            $json = json_decode(file_get_contents($file), true);
+            unset($json[$index]);
+            $json = array_values($json);
 
+            file_put_contents($file, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        }
+    }
+ // Добавление
+    if (!empty($_POST['name']) && !empty($_POST['surname'])) {
+        $newStudent = [
+            "name" => $_POST['name'],
+            "surname" => $_POST['surname'],
+            "age" => (int)$_POST['age']
+        ];
+
+        $json = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+        $json[] = $newStudent;
+
+        file_put_contents($file, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
 
     header("Location: index.php");
     exit;
 }
+
+// Поиск
+$search = $_GET['search'] ?? '';
+
+$filteredStudents = array_filter($students, function ($s) use ($search) {
+    return $search === '' || mb_stripos($s[0], $search) !== false;
+});
 ?>
 
 <!DOCTYPE html>
@@ -56,9 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Студенты ИСТ(б)-1-24</title>
     <style>
-        table { border-collapse: collapse; width: 100%; }
+        body { font-family: Arial; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-        form { margin-bottom: 15px; }
+        form { margin-bottom: 10px; }
+        input { padding: 5px; }
+        button { padding: 5px 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -71,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <button type="submit">Добавить</button>
 </form>
 
+<h2>Поиск</h2>
+<form method="get">
+    <input type="text" name="search" placeholder="Поиск по фамилии" value="<?= htmlspecialchars($search) ?>">
+    <button type="submit">Найти</button>
+</form>
+
 <h2>Таблица студентов</h2>
 <table>
     <tr>
@@ -78,14 +111,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <th>Имя Отчество</th>
         <th>Возраст</th>
         <th>Группа</th>
+        <th>Действие</th>
     </tr>
 
-    <?php foreach ($students as $student): ?>
+    <?php foreach ($filteredStudents as $index => $student): ?>
         <tr>
             <td><?= htmlspecialchars($student[0]) ?></td>
             <td><?= htmlspecialchars($student[1]) ?></td>
             <td><?= $student[2] ?></td>
             <td>ИСТ(б)-1-24</td>
+            <td>
+                <?php if ($index >= 20): ?>
+                    <form method="post" style="display:inline;">
+                        <button name="delete" value="<?= $index - 20 ?>">Удалить</button>
+                    </form>
+                <?php endif; ?>
+            </td>
         </tr>
     <?php endforeach; ?>
 
